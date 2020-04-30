@@ -1,6 +1,3 @@
-### Run  
-python build_qrcode.py
-
 # transport-qrcode-decode
 
 Implement transport tlv decoder and signature verify
