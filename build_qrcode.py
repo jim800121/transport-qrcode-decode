@@ -1,0 +1,68 @@
+from qrcode.transport_key import TransportKey
+from qrcode.transport_qrcode import QRCode, QRCodeParser
+from qrcode.tag_len_value import TLV
+
+
+def trans_data_to_dict(data):
+    '''
+    trans tlv format qrcode into human readable format
+    :param data: tlv qrcode
+    :return:
+    '''
+    output = []
+    for tlv in data:
+        if type(tlv.data).__name__ == 'list':
+            output.append({tlv.label: trans_data_to_dict(tlv.data)})
+        else:
+            output.append({tlv.label: tlv.data})
+    return output
+
+
+if __name__  == '__main__':
+    '''
+    main function
+    '''
+    data = [
+        TLV("51", "TWTV01"),
+        TLV("52", [
+            TLV("61", "1"),
+            TLV("62", "Z"),
+            TLV("63", "2"),
+            TLV("64", "20200501173006"),
+        ]),
+        TLV("54", [
+            TLV("41", "7"),
+            TLV("42", "901168034"),
+            TLV("44", "1"),
+            TLV("45", "全票"),
+            TLV("46", "TS9011680341588148301"),
+        ]),
+        TLV("55", [
+            TLV("71", "街口帳戶"),
+            TLV("72", "1"),
+            TLV("73", "-60"),
+            TLV("74", "20000"),
+            TLV("75", "1"),
+        ])
+    ]
+
+    transport_key = TransportKey()
+
+    qrcode = QRCode(data, transport_key)
+
+    qrcode_parser = QRCodeParser(qrcode.data_hex_str_bytes_base64, transport_key)
+
+    print('hex str: ', qrcode.data_hex_str_signed)
+    print('hex str bytes: ', qrcode.data_hex_str_signed_bytes)
+    print('base64 qrcode string: ', qrcode.data_hex_str_bytes_base64.decode("utf-8"))
+    print('length: ', len(qrcode.data_hex_str_bytes_base64.decode("utf-8")))
+    print('hex str bytes: ', qrcode_parser.qrcode_hex_str_bytes)
+    print('hex str: ', qrcode_parser.qrcode_hex_str)
+
+    print(trans_data_to_dict(qrcode_parser.decode_data))
+
+    print(qrcode_parser.verify())
+
+
+
+
