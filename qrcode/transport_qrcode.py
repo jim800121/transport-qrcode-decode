@@ -11,9 +11,12 @@ class QRCode:
     '''
     generate base64 qrcode string
     '''
-    critical_data_tags = {'64', '53', '54', '55'}
+    critical_data_tags = {'53', '54', '71', '72', '73', '74', '75', '76'}
+
 
     def __init__(self, data, transport_key):
+        self.signature_tag_id = '77'
+
         self.transport_key = transport_key
         self.data = data
         self.data_hex_str = self.get_hex_str(data)
@@ -21,6 +24,8 @@ class QRCode:
         print("critical content: ", critical_data)
         critical_data = self.get_hex_str_bytes("".join(critical_data))
         signature = self.sign_citical_data(critical_data)
+        print(len(signature), signature)
+        print(len(signature.hex()), signature.hex())
         self.insert_signature(signature)
         self.data_hex_str_signed = self.get_hex_str(self.data)
         self.data_hex_str_signed_bytes = self.get_hex_str_bytes(self.data_hex_str_signed)
@@ -47,7 +52,7 @@ class QRCode:
         '''
         critical_data = []
         for tlv in data:
-            if tlv.label == '52':
+            if tlv.label == '55':
                 for sub_tlv in tlv.data:
                     if sub_tlv.label in self.critical_data_tags:
                         critical_data.append(str(sub_tlv))
@@ -63,9 +68,9 @@ class QRCode:
         :return: None
         '''
         for tlv in self.data:
-            if tlv.label == '52':
+            if tlv.label == '55':
                 tlv.data.append(
-                    TLV('65', signature)
+                    TLV(self.signature_tag_id, signature)
                 )
                 break
 
@@ -93,8 +98,10 @@ class QRCodeParser:
         self.leaf_set = set()
 
         # signed tags
-        self.critical_data_tags = {'64', '53', '54', '55'}
+        self.critical_data_tags = {'53', '54', '71', '72', '73', '74', '75', '76'}
         self.critical_data_content = []
+
+        self.signature_tag_id = '77'
 
         self.decode_data = {
 
@@ -138,7 +145,7 @@ class QRCodeParser:
 
             data_start = i + 4 + extra_dl_len
             data_end = i + 4 + extra_dl_len + 2 * dl
-            if t == '65':
+            if t == self.signature_tag_id:
                 self.crypto = bytes.fromhex(tlv[data_start:data_end])
                 data.append(TLV(t, tlv[data_start:data_end]))
             elif t in self.leaf_set:
