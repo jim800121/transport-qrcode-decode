@@ -51,7 +51,10 @@ class TLV:
             for tlv in self.data:
                 print('label: ', tlv.label, len(tlv))
                 l += len(tlv)
-            return l + 2
+            if l > 254:
+                return l + 4
+            else:
+                return l + 2
         else:
             if type(self.data).__name__ == 'str':
                 dlen = len(self.data.encode("utf-8"))
